@@ -51,7 +51,7 @@ const WHATSAPP_NUMBER = "593979026721";
 function money(n){ return "$" + n.toFixed(2); }
 
 function findItem(id){
-  for(const cat of Object.values(MENU)){ 
+  for(const cat of Object.values(MENU)){
     const found = cat.items.find(i => i.id === id);
     if(found) return found;
   }
