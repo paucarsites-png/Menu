@@ -45,7 +45,8 @@ const MENU = {
 
 const cart = {}; // id -> qty
 const IVA_RATE = 0.15;
-const WHATSAPP_NUMBER = "0979026721";
+// Ecuador: country code 593 + mobile number without the first 0.
+const WHATSAPP_NUMBER = "593979026721";
 
 function money(n){ return "$" + n.toFixed(2); }
 
@@ -191,7 +192,25 @@ function sendOrderToWhatsApp(){
     `*Precio total:* ${money(total)}`
   ].join('\n');
 
-  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+  const encodedMessage = encodeURIComponent(message);
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // wa.me hands the order to WhatsApp on phones. WhatsApp Desktop uses its
+  // native protocol, including the recipient and prepared order message.
+  const whatsappLink = isMobile
+    ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`
+    : `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${encodedMessage}`;
+  if(isMobile){
+    window.open(whatsappLink, '_blank', 'noopener');
+  } else {
+    const webLink = `https://web.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodedMessage}`;
+    let desktopAppOpened = false;
+    window.addEventListener('blur', () => { desktopAppOpened = true; }, { once: true });
+    window.location.href = whatsappLink;
+    // If the desktop application is not installed, continue with WhatsApp Web.
+    setTimeout(() => {
+      if(!desktopAppOpened) window.open(webLink, '_blank', 'noopener');
+    }, 1500);
+  }
   closeDrawer();
 }
 
