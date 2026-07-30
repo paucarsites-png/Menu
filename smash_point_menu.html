@@ -49,11 +49,21 @@
   </div>
   <div class="drawer-items" id="drawerItems"></div>
   <div class="drawer-footer">
+    <label class="buyer-label" for="buyerName">Nombre del comprador</label>
+    <input class="buyer-input" id="buyerName" type="text" autocomplete="name" placeholder="Escribe tu nombre">
+    <div class="drawer-summary-row">
+      <span>Subtotal</span>
+      <span id="drawerSubtotal">$0.00</span>
+    </div>
+    <div class="drawer-summary-row">
+      <span>IVA (15%)</span>
+      <span id="drawerTax">$0.00</span>
+    </div>
     <div class="drawer-total-row">
       <span>Total</span>
       <span id="drawerTotal">$0.00</span>
     </div>
-    <button class="checkout-btn" id="checkoutBtn">Confirmar pedido</button>
+    <button class="checkout-btn" id="checkoutBtn">Enviar pedido por WhatsApp</button>
   </div>
 </div>
 
@@ -62,5 +72,4 @@
 <script src="smash_point_menu.js"></script>
 </body>
 </html>
-
 
