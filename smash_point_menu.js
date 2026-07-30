@@ -44,6 +44,8 @@ const MENU = {
 };
 
 const cart = {}; // id -> qty
+const IVA_RATE = 0.15;
+const WHATSAPP_NUMBER = "0979026721";
 
 function money(n){ return "$" + n.toFixed(2); }
 
@@ -55,15 +57,16 @@ function findItem(id){
 }
 
 function cartTotals(){
-  let count = 0, total = 0;
+  let count = 0, subtotal = 0;
   for(const id in cart){
     const qty = cart[id];
     if(qty > 0){
       count += qty;
-      total += qty * findItem(id).price;
+      subtotal += qty * findItem(id).price;
     }
   }
-  return { count, total };
+  const iva = subtotal * IVA_RATE;
+  return { count, subtotal, iva, total: subtotal + iva };
 }
 
 function setQty(id, qty){
@@ -113,7 +116,7 @@ function renderCartBar(){
 
 function renderDrawer(){
   const container = document.getElementById('drawerItems');
-  const { count, total } = cartTotals();
+  const { count, subtotal, iva, total } = cartTotals();
   if(count === 0){
     container.innerHTML = `<div class="empty-cart">Tu carrito está vacío.<br>Agrega algo delicioso 🍔</div>`;
   } else {
@@ -139,7 +142,57 @@ function renderDrawer(){
           </div>`;
       }).join('');
   }
+  document.getElementById('drawerSubtotal').textContent = money(subtotal);
+  document.getElementById('drawerTax').textContent = money(iva);
   document.getElementById('drawerTotal').textContent = money(total);
+}
+
+function requestId(){
+  const now = new Date();
+  const date = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('');
+  const time = [now.getHours(), now.getMinutes(), now.getSeconds()].map(value => String(value).padStart(2, '0')).join('');
+  return `SP-${date}-${time}`;
+}
+
+function saleDate(){
+  return new Intl.DateTimeFormat('es-EC', { dateStyle: 'full', timeStyle: 'short' }).format(new Date());
+}
+
+function sendOrderToWhatsApp(){
+  const { count, subtotal, iva, total } = cartTotals();
+  const buyerName = document.getElementById('buyerName').value.trim();
+  if(count === 0) return;
+  if(!buyerName){
+    showToast('Escribe el nombre del comprador ✍️');
+    document.getElementById('buyerName').focus();
+    return;
+  }
+
+  const products = Object.keys(cart)
+    .filter(id => cart[id] > 0)
+    .map(id => {
+      const item = findItem(id);
+      const qty = cart[id];
+      return `• ${qty} × ${item.name} — ${money(item.price * qty)}`;
+    })
+    .join('\n');
+  const message = [
+    '🍔 *Nuevo pedido — Smash Point*',
+    '',
+    `*ID de solicitud:* ${requestId()}`,
+    `*Comprador:* ${buyerName}`,
+    `*Fecha de venta:* ${saleDate()}`,
+    '',
+    '*Productos:*',
+    products,
+    '',
+    `*Precio (subtotal):* ${money(subtotal)}`,
+    `*IVA (15%):* ${money(iva)}`,
+    `*Precio total:* ${money(total)}`
+  ].join('\n');
+
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+  closeDrawer();
 }
 
 function openDrawer(){
@@ -201,12 +254,8 @@ document.getElementById('cartBar').onclick = openDrawer;
 document.getElementById('drawerClose').onclick = closeDrawer;
 document.getElementById('overlay').onclick = closeDrawer;
 document.getElementById('checkoutBtn').onclick = () => {
-  const { count } = cartTotals();
-  if(count === 0) return;
-  showToast("¡Pedido confirmado! 🎉 Te contactaremos al 0978650037");
-  closeDrawer();
+  sendOrderToWhatsApp();
 };
 
 buildUI();
 renderCartBar();
-
