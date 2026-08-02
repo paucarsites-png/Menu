@@ -1,73 +1,78 @@
-const cart = {}; // id -> qty
-const optionMenus = {}; // parent product id -> is open
-const IVA_RATE = 0.15;
+const cart = {};
+const optionMenus = {};
+let currentView = 'home';
+let currentCategory = null;
+let currentModalProduct = null;
+let IVA_RATE = 0.15;
 
-function money(n){ return "$" + n.toFixed(2); }
+function money(n) { return '$' + n.toFixed(2); }
 
-function findItem(id){
-  for(const cat of Object.values(MENU)){
+function getIvaRate() {
+  return MENU_DATA?.settings?.ivaRate ?? 0.15;
+}
+
+function findItem(id) {
+  for (const cat of Object.values(MENU)) {
     const found = cat.items.find(i => i.id === id);
-    if(found) return { ...found, parentId: found.id };
-    for(const item of cat.items){
-      const option = item.options?.find(choice => choice.id === id);
-      if(option) return { ...item, ...option, price: option.price ?? item.price, parentId: item.id };
+    if (found) return { ...found, parentId: found.id };
+    for (const item of cat.items) {
+      const option = item.options?.find(c => c.id === id);
+      if (option) return { ...item, ...option, price: option.price ?? item.price, parentId: item.id };
     }
   }
 }
 
-function cartTotals(){
+function cartTotals() {
   let count = 0, subtotal = 0;
-  for(const id in cart){
+  for (const id in cart) {
     const qty = cart[id];
-    if(qty > 0){
+    if (qty > 0) {
       count += qty;
       subtotal += qty * findItem(id).price;
     }
   }
-  const iva = subtotal * IVA_RATE;
+  const iva = subtotal * getIvaRate();
   return { count, subtotal, iva, total: subtotal + iva };
 }
 
-function setQty(id, qty){
+function setQty(id, qty) {
   cart[id] = Math.max(0, qty);
   renderStepper(id);
   const item = findItem(id);
-  if(item && item.parentId !== id) renderStepper(item.parentId);
-  if(item && cart[id] === 0 && !productHasItems(item.parentId)) collapseProduct(item.parentId);
-  renderCartBar();
-  if(document.getElementById('drawer').classList.contains('show')) renderDrawer();
+  if (item && item.parentId !== id) renderStepper(item.parentId);
+  renderCartUI();
+  if (document.getElementById('drawer').classList.contains('show')) renderDrawer();
 }
 
-function productHasItems(parentId){
-  return Object.keys(cart).some(id => cart[id] > 0 && findItem(id)?.parentId === parentId);
-}
-
-function renderStepper(id){
+function renderStepper(id) {
   const el = document.getElementById('stepper-' + id);
-  if(!el) return;
+  if (!el) return;
   const qty = cart[id] || 0;
   const item = findItem(id);
-  if(item.options){
+  if (!item) return;
+
+  if (item.options) {
     const isOpen = optionMenus[id];
-    const buttonText = id === 'b1' ? 'Elegir sabor' : 'Elegir cola';
+    const buttonText = id.startsWith('b1') ? 'Elegir sabor' : 'Elegir cola';
     el.innerHTML = `
       <button class="add-btn" onclick="event.stopPropagation(); toggleOptions('${id}')">${buttonText}</button>
       ${isOpen ? `<div class="option-picker" onclick="event.stopPropagation()">
-        ${item.options.map(option => `
+        ${item.options.map(opt => `
           <div class="option-row">
-            <span>${option.label}</span>
-            ${(cart[option.id] || 0) === 0
-              ? `<button class="option-add-btn" onclick="event.stopPropagation(); addFirst('${option.id}')">Agregar</button>`
+            <span>${opt.label}</span>
+            ${(cart[opt.id] || 0) === 0
+              ? `<button class="option-add-btn" onclick="event.stopPropagation(); addFirst('${opt.id}')">Agregar</button>`
               : `<div class="option-stepper">
-                  <button onclick="event.stopPropagation(); setQty('${option.id}', ${(cart[option.id] || 0) - 1})">−</button>
-                  <span>${cart[option.id]}</span>
-                  <button onclick="event.stopPropagation(); setQty('${option.id}', ${(cart[option.id] || 0) + 1})">+</button>
+                  <button onclick="event.stopPropagation(); setQty('${opt.id}', ${(cart[opt.id] || 0) - 1})">−</button>
+                  <span>${cart[opt.id]}</span>
+                  <button onclick="event.stopPropagation(); setQty('${opt.id}', ${(cart[opt.id] || 0) + 1})">+</button>
                 </div>`}
           </div>`).join('')}
       </div>` : ''}`;
     return;
   }
-  if(qty === 0){
+
+  if (qty === 0) {
     el.innerHTML = `<button class="add-btn" onclick="event.stopPropagation(); addFirst('${id}')">Agregar</button>`;
   } else {
     el.innerHTML = `
@@ -79,51 +84,17 @@ function renderStepper(id){
   }
 }
 
-function toggleOptions(id){
+function toggleOptions(id) {
   optionMenus[id] = !optionMenus[id];
-  expandProduct(id);
   renderStepper(id);
 }
 
-function toggleProduct(id){
-  const card = document.getElementById('card-' + id);
-  if(card){
-    const isExpanded = card.classList.toggle('is-expanded');
-    card.setAttribute('aria-expanded', String(isExpanded));
-    if(!isExpanded && optionMenus[id]){
-      optionMenus[id] = false;
-      renderStepper(id);
-    }
-  }
-}
-
-function expandProduct(id){
-  const card = document.getElementById('card-' + id);
-  if(card){
-    card.classList.add('is-expanded');
-    card.setAttribute('aria-expanded', 'true');
-  }
-}
-
-function collapseProduct(id){
-  const card = document.getElementById('card-' + id);
-  if(card){
-    card.classList.remove('is-expanded');
-    card.setAttribute('aria-expanded', 'false');
-  }
-  if(optionMenus[id]){
-    optionMenus[id] = false;
-    renderStepper(id);
-  }
-}
-
-function addFirst(id){
+function addFirst(id) {
   setQty(id, 1);
-  expandProduct(findItem(id).parentId);
-  showToast(findItem(id).name + " agregado ✓");
+  showToast(findItem(id).name + ' agregado ✓');
 }
 
-function showToast(msg){
+function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
   toast.classList.add('show');
@@ -131,18 +102,17 @@ function showToast(msg){
   showToast._t = setTimeout(() => toast.classList.remove('show'), 1400);
 }
 
-function renderCartBar(){
-  const { count, total } = cartTotals();
-  const bar = document.getElementById('cartBar');
-  document.getElementById('cartCount').textContent = count + (count === 1 ? " producto" : " productos");
-  document.getElementById('cartTotal').textContent = money(total);
-  bar.classList.toggle('show', count > 0);
+function renderCartUI() {
+  const { count } = cartTotals();
+  const badge = document.getElementById('fabBadge');
+  badge.textContent = count;
+  badge.dataset.count = count;
 }
 
-function renderDrawer(){
+function renderDrawer() {
   const container = document.getElementById('drawerItems');
   const { count, subtotal, iva, total } = cartTotals();
-  if(count === 0){
+  if (count === 0) {
     container.innerHTML = `<div class="empty-cart">Tu carrito está vacío.<br>Agrega algo delicioso 🍔</div>`;
   } else {
     container.innerHTML = Object.keys(cart)
@@ -153,10 +123,10 @@ function renderDrawer(){
         return `
           <div class="drawer-item">
             <div>
-              <div class="drawer-item-name">${item.icon} ${item.name}</div>
+              <div class="drawer-item-name">${item.icon || ''} ${item.name}</div>
               <div class="drawer-item-sub">${qty} × ${money(item.price)}</div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;">
               <div class="stepper">
                 <button onclick="setQty('${id}', ${qty - 1})">−</button>
                 <div class="qty">${qty}</div>
@@ -170,72 +140,220 @@ function renderDrawer(){
   document.getElementById('drawerSubtotal').textContent = money(subtotal);
   document.getElementById('drawerTax').textContent = money(iva);
   document.getElementById('drawerTotal').textContent = money(total);
+  const ivaPct = Math.round(getIvaRate() * 100);
+  document.getElementById('ivaLabel').textContent = `IVA (${ivaPct}%)`;
 }
 
-function openDrawer(){
+function openDrawer() {
   renderDrawer();
   document.getElementById('overlay').classList.add('show');
   document.getElementById('drawer').classList.add('show');
 }
-function closeDrawer(){
+
+function closeDrawer() {
   document.getElementById('overlay').classList.remove('show');
   document.getElementById('drawer').classList.remove('show');
 }
 
-function buildUI(){
-  const tabsEl = document.getElementById('tabs');
-  const panelsEl = document.getElementById('panels');
-  const catKeys = Object.keys(MENU);
+function openProductModal(productId) {
+  const item = findItem(productId);
+  if (!item) return;
+  currentModalProduct = productId;
 
-  catKeys.forEach((key, idx) => {
-    const cat = MENU[key];
-    const tab = document.createElement('div');
-    tab.className = 'tab' + (idx === 0 ? ' active' : '');
-    tab.textContent = cat.icon + ' ' + cat.label;
-    tab.onclick = () => selectTab(key);
-    tab.id = 'tab-' + key;
-    tabsEl.appendChild(tab);
+  document.getElementById('modalImage').src = item.image;
+  document.getElementById('modalImage').alt = item.name;
+  document.getElementById('modalName').textContent = item.name;
+  document.getElementById('modalDesc').textContent = item.desc || '';
+  const noteEl = document.getElementById('modalNote');
+  if (item.note) {
+    noteEl.textContent = item.note;
+    noteEl.style.display = 'block';
+  } else {
+    noteEl.style.display = 'none';
+  }
+  document.getElementById('modalPrice').textContent = money(item.price);
 
-    const panel = document.createElement('div');
-    panel.className = 'panel' + (idx === 0 ? ' active' : '');
-    panel.id = 'panel-' + key;
-    panel.innerHTML = `<div class="panel-title">${cat.icon} ${cat.label}</div>` +
-      cat.items.map(item => `
-        <div class="card" id="card-${item.id}" role="button" tabindex="0" aria-expanded="false" onclick="toggleProduct('${item.id}')" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleProduct('${item.id}'); }">
-          <div class="card-icon"><img src="${item.image}" alt="${item.name}" loading="lazy"></div>
-          <div class="card-body">
-            <p class="card-name">${item.name}</p>
-            <p class="card-hint">Toca para ver detalles</p>
-            <div class="card-details"><div class="card-details-inner">
-              <p class="card-desc">${item.desc}</p>
-              ${item.note ? `<div class="note">${item.note}</div>` : ''}
-            </div></div>
-            <div class="card-footer">
-              <div class="price">${money(item.price)}</div>
-              <div id="stepper-${item.id}"></div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    panelsEl.appendChild(panel);
+  const stepperEl = document.getElementById('modalStepper');
+  stepperEl.innerHTML = `<div id="stepper-${productId}"></div>`;
+  renderStepper(productId);
+
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('productModal').classList.add('show');
+}
+
+function closeProductModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.getElementById('productModal').classList.remove('show');
+  currentModalProduct = null;
+}
+
+function showView(view, categoryId) {
+  currentView = view;
+  currentCategory = categoryId || null;
+
+  document.getElementById('viewHome').classList.toggle('active', view === 'home');
+  document.getElementById('viewCategory').classList.toggle('active', view === 'category');
+
+  document.querySelectorAll('.cat-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.cat === categoryId);
   });
 
-  catKeys.forEach(key => MENU[key].items.forEach(item => renderStepper(item.id)));
+  document.querySelectorAll('.nav-item[data-nav]').forEach(n => {
+    n.classList.toggle('active', n.dataset.nav === 'home' && view === 'home');
+  });
+
+  if (view === 'category' && categoryId) {
+    renderCategoryView(categoryId);
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function selectTab(key){
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + key).classList.add('active');
-  document.getElementById('panel-' + key).classList.add('active');
+function renderCategoryView(categoryId) {
+  const cat = MENU[categoryId];
+  if (!cat) return;
+
+  document.getElementById('catHeading').textContent = cat.label;
+
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = cat.items.map(item => `
+    <div class="prod-card" onclick="openProductModal('${item.id}')">
+      <img class="prod-card-img" src="${item.image}" alt="${item.name}" loading="lazy">
+      <div class="prod-card-body">
+        <p class="prod-card-name">${item.name}</p>
+        <p class="prod-card-desc">${item.desc || ''}</p>
+        <button class="prod-card-btn" onclick="event.stopPropagation(); openProductModal('${item.id}')">VER DETALLES</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-document.getElementById('cartBar').onclick = openDrawer;
+function renderRecommended() {
+  const grid = document.getElementById('recGrid');
+  const items = MENU_DATA.recommended || [];
+  grid.innerHTML = items.map(rec => {
+    const isLarge = rec.size === 'large';
+    const isWhite = !rec.image || rec.size === 'small' && rec.title.includes('PICK UP') || rec.title.includes('ESTRELLAS');
+    const clickAction = rec.categoryId ? `showView('category','${rec.categoryId}')` : rec.productId ? `openProductModal('${rec.productId}')` : '';
+
+    if (isWhite && !isLarge) {
+      return `
+        <div class="rec-card small white-bg" ${clickAction ? `onclick="${clickAction}"` : ''}>
+          ${rec.image ? `<img src="${rec.image}" alt="">` : ''}
+          <div class="rec-card-title">${rec.title}</div>
+          ${rec.subtitle ? `<div class="rec-card-sub">${rec.subtitle}</div>` : ''}
+        </div>`;
+    }
+
+    return `
+      <div class="rec-card ${isLarge ? 'large' : 'small'}" ${clickAction ? `onclick="${clickAction}"` : ''}>
+        <img src="${rec.image}" alt="${rec.title}" loading="lazy">
+        <div class="rec-card-overlay">
+          <div class="rec-card-title">${rec.title}</div>
+          ${rec.subtitle ? `<div class="rec-card-sub">${rec.subtitle}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderPopular() {
+  const list = document.getElementById('popularList');
+  const items = MENU_DATA.popular || [];
+  list.innerHTML = items.map(pop => {
+    const clickAction = pop.productId ? `openProductModal('${pop.productId}')` : '';
+    return `
+      <div class="pop-card" ${clickAction ? `onclick="${clickAction}"` : ''}>
+        <img src="${pop.image}" alt="${pop.name}" loading="lazy">
+        <div class="pop-card-text">
+          <p class="pop-card-name">${pop.name}</p>
+          ${pop.subtitle ? `<p class="pop-card-sub">${pop.subtitle}</p>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderCategoryBar() {
+  const bar = document.getElementById('catBar');
+  const cats = [...MENU_DATA.categories].sort((a, b) => a.order - b.order);
+  bar.innerHTML = cats.map(cat => `
+    <button class="cat-pill" data-cat="${cat.id}" onclick="showView('category','${cat.id}')">${cat.label}</button>
+  `).join('');
+}
+
+function renderSideNav() {
+  const nav = document.getElementById('sideNav');
+  const cats = [...MENU_DATA.categories].sort((a, b) => a.order - b.order);
+  nav.innerHTML = `
+    <button class="side-nav-item" onclick="showView('home'); closeSideMenu()">
+      <span class="nav-icon">🏠</span> Inicio
+    </button>
+    ${cats.map(cat => `
+      <button class="side-nav-item" onclick="showView('category','${cat.id}'); closeSideMenu()">
+        <span class="nav-icon">${cat.icon || '🍔'}</span> ${cat.label}
+      </button>
+    `).join('')}
+  `;
+}
+
+function applySettings() {
+  const s = getSettings();
+  const logo = s.logo || 'assets/logo.png';
+
+  document.getElementById('brandLogo').src = logo;
+  document.getElementById('sideLogo').src = logo;
+  document.getElementById('brandName').textContent = s.businessName || 'Smash Point';
+  document.getElementById('locationText').textContent = s.locationName || s.businessName || 'Smash Point';
+  document.title = (s.businessName || 'Smash Point') + ' — Menú';
+
+  const infoHtml = `
+    📞 Pedidos: <b>${s.phone || ''}</b><br>
+    🕔 ${s.hours || ''}<br>
+    📍 <b>${s.address || ''}</b>
+  `;
+  document.getElementById('infoBlock').innerHTML = infoHtml;
+  document.getElementById('sideInfo').innerHTML = infoHtml;
+}
+
+function openSideMenu() {
+  document.getElementById('sideOverlay').classList.add('show');
+  document.getElementById('sideMenu').classList.add('show');
+}
+
+function closeSideMenu() {
+  document.getElementById('sideOverlay').classList.remove('show');
+  document.getElementById('sideMenu').classList.remove('show');
+}
+
+function buildUI() {
+  applySettings();
+  renderCategoryBar();
+  renderRecommended();
+  renderPopular();
+  renderSideNav();
+  showView('home');
+  renderCartUI();
+}
+
+// Event listeners
+document.getElementById('menuBtn').onclick = openSideMenu;
+document.getElementById('sideClose').onclick = closeSideMenu;
+document.getElementById('sideOverlay').onclick = closeSideMenu;
+document.getElementById('navFab').onclick = openDrawer;
 document.getElementById('drawerClose').onclick = closeDrawer;
 document.getElementById('overlay').onclick = closeDrawer;
-document.getElementById('checkoutBtn').onclick = () => {
-  sendOrderToWhatsApp();
-};
+document.getElementById('modalClose').onclick = closeProductModal;
+document.getElementById('modalOverlay').onclick = closeProductModal;
+document.getElementById('checkoutBtn').onclick = () => sendOrderToWhatsApp();
 
-buildUI();
-renderCartBar();
+document.querySelectorAll('.nav-item[data-nav]').forEach(btn => {
+  btn.onclick = () => {
+    if (btn.dataset.nav === 'home') showView('home');
+    else showToast('Próximamente ✨');
+  };
+});
+
+// Init
+loadMenuData().then(data => {
+  buildMenuFromData(data);
+  buildUI();
+});

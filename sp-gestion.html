@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión — Smash Point</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sp-gestion.css">
+</head>
+<body>
+
+<!-- Login screen -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <img class="login-logo" id="loginLogo" src="assets/logo.png" alt="">
+    <h1>Panel de gestión</h1>
+    <p>Ingresa la clave de administrador</p>
+    <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password">
+    <button class="btn-primary" id="loginBtn">Entrar</button>
+    <p class="login-error" id="loginError"></p>
+  </div>
+</div>
+
+<!-- Admin panel -->
+<div class="admin-app" id="adminApp" style="display:none">
+
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <img class="admin-logo" id="adminLogo" src="assets/logo.png" alt="">
+      <h1>Smash Point — Admin</h1>
+    </div>
+    <div class="admin-header-actions">
+      <button class="btn-outline" id="exportBtn">Exportar JSON</button>
+      <label class="btn-outline import-label">
+        Importar JSON
+        <input type="file" id="importFile" accept=".json" hidden>
+      </label>
+      <button class="btn-outline btn-danger" id="resetBtn">Restablecer</button>
+      <a class="btn-outline" href="smash_point_menu.html" target="_blank">Ver menú ↗</a>
+      <button class="btn-outline" id="logoutBtn">Salir</button>
+    </div>
+  </header>
+
+  <nav class="admin-tabs" id="adminTabs">
+    <button class="admin-tab active" data-tab="settings">Configuración</button>
+    <button class="admin-tab" data-tab="categories">Categorías</button>
+    <button class="admin-tab" data-tab="products">Productos</button>
+    <button class="admin-tab" data-tab="recommended">Recomendados</button>
+    <button class="admin-tab" data-tab="popular">Populares</button>
+  </nav>
+
+  <main class="admin-main">
+
+    <!-- Settings -->
+    <section class="admin-panel active" id="panel-settings">
+      <h2>Configuración general</h2>
+      <form class="admin-form" id="settingsForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre del negocio</label>
+            <input type="text" id="s-businessName" required>
+          </div>
+          <div class="form-group">
+            <label>Nombre de ubicación</label>
+            <input type="text" id="s-locationName">
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" id="s-phone">
+          </div>
+          <div class="form-group">
+            <label>WhatsApp (593...)</label>
+            <input type="text" id="s-whatsapp">
+          </div>
+          <div class="form-group">
+            <label>Horario</label>
+            <input type="text" id="s-hours">
+          </div>
+          <div class="form-group">
+            <label>Dirección</label>
+            <input type="text" id="s-address">
+          </div>
+          <div class="form-group">
+            <label>Eslogan</label>
+            <input type="text" id="s-tagline">
+          </div>
+          <div class="form-group">
+            <label>IVA (%)</label>
+            <input type="number" id="s-ivaRate" min="0" max="100" step="1">
+          </div>
+          <div class="form-group">
+            <label>Contraseña admin</label>
+            <input type="password" id="s-adminPassword">
+          </div>
+          <div class="form-group full">
+            <label>Logo del local</label>
+            <div class="logo-upload">
+              <img id="s-logoPreview" src="assets/logo.png" alt="Logo">
+              <label class="btn-outline">
+                Subir imagen
+                <input type="file" id="s-logoFile" accept="image/*" hidden>
+              </label>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Guardar configuración</button>
+      </form>
+    </section>
+
+    <!-- Categories -->
+    <section class="admin-panel" id="panel-categories">
+      <div class="panel-header">
+        <h2>Categorías</h2>
+        <button class="btn-primary btn-sm" id="addCategoryBtn">+ Agregar categoría</button>
+      </div>
+      <div class="item-list" id="categoryList"></div>
+    </section>
+
+    <!-- Products -->
+    <section class="admin-panel" id="panel-products">
+      <div class="panel-header">
+        <h2>Productos</h2>
+        <div class="panel-filters">
+          <select id="productFilter">
+            <option value="">Todas las categorías</option>
+          </select>
+          <button class="btn-primary btn-sm" id="addProductBtn">+ Agregar producto</button>
+        </div>
+      </div>
+      <div class="item-list" id="productList"></div>
+    </section>
+
+    <!-- Recommended -->
+    <section class="admin-panel" id="panel-recommended">
+      <div class="panel-header">
+        <h2>Tarjetas recomendadas</h2>
+        <button class="btn-primary btn-sm" id="addRecBtn">+ Agregar tarjeta</button>
+      </div>
+      <div class="item-list" id="recList"></div>
+    </section>
+
+    <!-- Popular -->
+    <section class="admin-panel" id="panel-popular">
+      <div class="panel-header">
+        <h2>Productos populares</h2>
+        <button class="btn-primary btn-sm" id="addPopBtn">+ Agregar popular</button>
+      </div>
+      <div class="item-list" id="popList"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-bg" id="modalBg"></div>
+<div class="edit-modal" id="editModal">
+  <div class="edit-modal-header">
+    <h3 id="modalTitle">Editar</h3>
+    <button class="modal-x" id="modalClose">✕</button>
+  </div>
+  <div class="edit-modal-body" id="modalBody"></div>
+  <div class="edit-modal-footer">
+    <button class="btn-outline" id="modalCancel">Cancelar</button>
+    <button class="btn-primary" id="modalSave">Guardar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="smash_point_data.js"></script>
+<script src="sp-gestion.js"></script>
+</body>
+</html>

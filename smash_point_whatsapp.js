@@ -1,23 +1,17 @@
-// Ecuador: country code 593 + mobile number without the first 0.
-const WHATSAPP_NUMBER = "593979026721";
-
-function saleDate(){
-  return new Intl.DateTimeFormat('es-EC', {
-    dateStyle: 'full',
-    timeStyle: 'short'
-  }).format(new Date());
-}
-
-function sendOrderToWhatsApp(){
+function sendOrderToWhatsApp() {
   const { count, total } = cartTotals();
   const buyerName = document.getElementById('buyerName').value.trim();
-  if(count === 0) return;
+  if (count === 0) return;
 
-  if(!buyerName){
+  if (!buyerName) {
     showToast('Escribe el nombre del comprador ✍️');
     document.getElementById('buyerName').focus();
     return;
   }
+
+  const settings = getSettings();
+  const whatsappNumber = settings.whatsapp || '593979026721';
+  const businessName = settings.businessName || 'Smash Point';
 
   const products = Object.keys(cart)
     .filter(id => cart[id] > 0)
@@ -29,7 +23,7 @@ function sendOrderToWhatsApp(){
     .join('\n');
 
   const message = [
-    '🍔 *Nuevo pedido — Smash Point*',
+    `🍔 *Nuevo pedido — ${businessName}*`,
     '',
     `*Comprador:* ${buyerName}`,
     `*Fecha de venta:* ${saleDate()}`,
@@ -43,20 +37,27 @@ function sendOrderToWhatsApp(){
   const encodedMessage = encodeURIComponent(message);
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   const whatsappLink = isMobile
-    ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`
-    : `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${encodedMessage}`;
+    ? `https://wa.me/${whatsappNumber}?text=${encodedMessage}`
+    : `whatsapp://send?phone=${whatsappNumber}&text=${encodedMessage}`;
 
-  if(isMobile){
+  if (isMobile) {
     window.open(whatsappLink, '_blank', 'noopener');
   } else {
-    const webLink = `https://web.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodedMessage}`;
+    const webLink = `https://web.whatsapp.com/send?phone=${whatsappNumber}&text=${encodedMessage}`;
     let desktopAppOpened = false;
     window.addEventListener('blur', () => { desktopAppOpened = true; }, { once: true });
     window.location.href = whatsappLink;
     setTimeout(() => {
-      if(!desktopAppOpened) window.open(webLink, '_blank', 'noopener');
+      if (!desktopAppOpened) window.open(webLink, '_blank', 'noopener');
     }, 1500);
   }
 
   closeDrawer();
+}
+
+function saleDate() {
+  return new Intl.DateTimeFormat('es-EC', {
+    dateStyle: 'full',
+    timeStyle: 'short'
+  }).format(new Date());
 }
