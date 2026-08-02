@@ -23,7 +23,7 @@ function sendOrderToWhatsApp() {
     .join('\n');
 
   const message = [
-    `🍔 *Nuevo pedido — ${businessName}*`,
+    `*Nuevo pedido — ${businessName}*`,
     '',
     `*Comprador:* ${buyerName}`,
     `*Fecha de venta:* ${saleDate()}`,
