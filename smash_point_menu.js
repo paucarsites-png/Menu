@@ -233,17 +233,7 @@ function renderRecommended() {
   const items = MENU_DATA.recommended || [];
   grid.innerHTML = items.map(rec => {
     const isLarge = rec.size === 'large';
-    const isWhite = !rec.image || rec.size === 'small' && rec.title.includes('PICK UP') || rec.title.includes('ESTRELLAS');
     const clickAction = rec.categoryId ? `showView('category','${rec.categoryId}')` : rec.productId ? `openProductModal('${rec.productId}')` : '';
-
-    if (isWhite && !isLarge) {
-      return `
-        <div class="rec-card small white-bg" ${clickAction ? `onclick="${clickAction}"` : ''}>
-          ${rec.image ? `<img src="${rec.image}" alt="">` : ''}
-          <div class="rec-card-title">${rec.title}</div>
-          ${rec.subtitle ? `<div class="rec-card-sub">${rec.subtitle}</div>` : ''}
-        </div>`;
-    }
 
     return `
       <div class="rec-card ${isLarge ? 'large' : 'small'}" ${clickAction ? `onclick="${clickAction}"` : ''}>
@@ -334,6 +324,20 @@ function buildUI() {
   renderCartUI();
 }
 
+function reloadDataFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.categories) || !Array.isArray(data.products)) return;
+    MENU_DATA = data;
+    buildMenuFromData(data);
+    buildUI();
+  } catch (error) {
+    console.warn('No se pudieron recargar los datos del menú:', error);
+  }
+}
+
 // Event listeners
 document.getElementById('menuBtn').onclick = openSideMenu;
 document.getElementById('sideClose').onclick = closeSideMenu;
@@ -348,8 +352,11 @@ document.getElementById('checkoutBtn').onclick = () => sendOrderToWhatsApp();
 document.querySelectorAll('.nav-item[data-nav]').forEach(btn => {
   btn.onclick = () => {
     if (btn.dataset.nav === 'home') showView('home');
-    else showToast('Próximamente ✨');
   };
+});
+
+window.addEventListener('storage', (event) => {
+  if (event.key === STORAGE_KEY) reloadDataFromStorage();
 });
 
 // Init

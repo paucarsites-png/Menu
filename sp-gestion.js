@@ -64,31 +64,6 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
   };
 });
 
-// ── Export / Import / Reset ──
-document.getElementById('exportBtn').onclick = () => {
-  exportMenuData();
-  showToast('JSON exportado ✓');
-};
-
-document.getElementById('importFile').onchange = async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    await importMenuData(file);
-    renderAll();
-    showToast('Datos importados ✓');
-  } catch {
-    showToast('Error al importar JSON');
-  }
-  e.target.value = '';
-};
-
-document.getElementById('resetBtn').onclick = () => {
-  if (!confirm('¿Restablecer a los datos originales? Se perderán los cambios locales.')) return;
-  resetToDefaults();
-  location.reload();
-};
-
 // ── Settings ──
 function fillSettingsForm() {
   const s = MENU_DATA.settings;

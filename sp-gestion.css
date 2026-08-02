@@ -21,6 +21,8 @@ body {
   min-height: 100dvh;
 }
 
+img { max-width: 100%; }
+
 /* ── Login ── */
 .login-screen {
   min-height: 100dvh;
@@ -96,6 +98,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
 }
 
 .admin-logo { width: 36px; height: 36px; object-fit: contain; }
@@ -104,6 +107,10 @@ body {
   font-size: 18px;
   font-weight: 800;
   margin: 0;
+}
+
+.btn-logout {
+  margin-left: 0;
 }
 
 .admin-header-actions {
@@ -402,9 +409,71 @@ body {
 .toast.show { transform: translateX(-50%) translateY(0); }
 
 /* ── Responsive ── */
+@media (max-width: 860px) {
+  .admin-header {
+    padding: 14px 16px;
+  }
+
+  .admin-header-left {
+    width: 100%;
+  }
+
+  .admin-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
-  .form-grid { grid-template-columns: 1fr; }
-  .admin-header { padding: 12px 16px; }
-  .admin-main { padding: 16px; }
-  .item-card { flex-wrap: wrap; }
+  .admin-main { padding: 16px 14px 24px; }
+  .admin-tabs { padding: 12px 14px; }
+  .panel-header { align-items: flex-start; }
+  .item-card {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .item-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .logo-upload {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .login-box {
+    padding: 28px 18px;
+    border-radius: 16px;
+  }
+
+  .login-box h1 {
+    font-size: 20px;
+  }
+
+  .btn-primary,
+  .btn-outline,
+  .btn-icon {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-header-actions {
+    flex-direction: column;
+  }
+
+  .panel-filters {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .panel-filters select {
+    width: 100%;
+  }
 }

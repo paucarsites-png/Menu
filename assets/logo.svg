@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="Smash Point logo">
+  <g stroke="#111111" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 118c0-37 29-67 66-67h60c37 0 66 30 66 67v18c0 34-27 62-62 62H126c-35 0-62-28-62-62V118z" fill="#EFE5D1"/>
+    <path d="M95 111c16-16 35-24 57-24 26 0 49 10 64 29" fill="none"/>
+    <path d="M83 147c28-18 58-27 89-27 38 0 72 13 99 36l-18 42H101l-18-51z" fill="#F5C77D"/>
+    <path d="M94 165h132l-10 43c-5 24-28 41-54 41H157c-27 0-49-17-54-41l-9-43z" fill="#F0E4D0"/>
+    <path d="M114 173h92" fill="none"/>
+    <path d="M89 192h42l-10 26H96l-7-26z" fill="#F0E4D0"/>
+    <path d="M184 192h47l8 26h-38l-17-26z" fill="#F0E4D0"/>
+    <path d="M108 137c13-14 26-20 40-20 18 0 34 7 47 21" fill="none"/>
+    <path d="M42 146c-15 5-25 18-28 34-4 19 6 38 25 47l25-12-9-31-13-38z" fill="#EFE5D1"/>
+    <path d="M279 146c15 5 25 18 28 34 4 19-6 38-25 47l-25-12 9-31 13-38z" fill="#EFE5D1"/>
+    <circle cx="130" cy="126" r="17" fill="#F7F3EE"/>
+    <circle cx="192" cy="126" r="17" fill="#F7F3EE"/>
+    <circle cx="133" cy="128" r="7" fill="#111111"/>
+    <circle cx="194" cy="128" r="7" fill="#111111"/>
+    <path d="M126 170c18 19 52 19 70 0" fill="none"/>
+    <path d="M90 205c12-11 23-17 35-17 15 0 28 7 40 19 14 16 32 25 53 25 21 0 39-7 53-22" fill="none"/>
+    <path d="M72 226c10-7 18-9 27-9 12 0 21 7 27 18 7 13 17 23 29 29 13 6 28 7 43 1 12-5 24-14 34-28" fill="none"/>
+    <path d="M76 245c10 16 20 23 36 23" fill="none"/>
+    <path d="M236 245c-10 16-20 23-36 23" fill="none"/>
+    <path d="M95 79c-14 0-26 8-33 20" fill="none"/>
+    <path d="M226 79c14 0 26 8 33 20" fill="none"/>
+  </g>
+</svg>
