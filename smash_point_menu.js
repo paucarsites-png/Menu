@@ -3,13 +3,7 @@ const optionMenus = {};
 let currentView = 'home';
 let currentCategory = null;
 let currentModalProduct = null;
-let IVA_RATE = 0.15;
-
 function money(n) { return '$' + n.toFixed(2); }
-
-function getIvaRate() {
-  return MENU_DATA?.settings?.ivaRate ?? 0.15;
-}
 
 function findItem(id) {
   for (const cat of Object.values(MENU)) {
@@ -23,16 +17,15 @@ function findItem(id) {
 }
 
 function cartTotals() {
-  let count = 0, subtotal = 0;
+  let count = 0, total = 0;
   for (const id in cart) {
     const qty = cart[id];
     if (qty > 0) {
       count += qty;
-      subtotal += qty * findItem(id).price;
+      total += qty * findItem(id).price;
     }
   }
-  const iva = subtotal * getIvaRate();
-  return { count, subtotal, iva, total: subtotal + iva };
+  return { count, total };
 }
 
 function setQty(id, qty) {
@@ -111,7 +104,7 @@ function renderCartUI() {
 
 function renderDrawer() {
   const container = document.getElementById('drawerItems');
-  const { count, subtotal, iva, total } = cartTotals();
+  const { count, total } = cartTotals();
   if (count === 0) {
     container.innerHTML = `<div class="empty-cart">Tu carrito está vacío.<br>Agrega algo delicioso 🍔</div>`;
   } else {
@@ -137,11 +130,7 @@ function renderDrawer() {
           </div>`;
       }).join('');
   }
-  document.getElementById('drawerSubtotal').textContent = money(subtotal);
-  document.getElementById('drawerTax').textContent = money(iva);
   document.getElementById('drawerTotal').textContent = money(total);
-  const ivaPct = Math.round(getIvaRate() * 100);
-  document.getElementById('ivaLabel').textContent = `IVA (${ivaPct}%)`;
 }
 
 function openDrawer() {
