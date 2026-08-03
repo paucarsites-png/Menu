@@ -481,99 +481,11 @@ window.deleteRec = id => {
   showToast('Tarjeta eliminada');
 };
 
-// ── Popular CRUD ──
-function renderPopular() {
-  const list = document.getElementById('popList');
-  list.innerHTML = (MENU_DATA.popular || []).map(p => `
-    <div class="item-card">
-      ${p.image ? `<img src="${p.image}" alt="">` : ''}
-      <div class="item-card-info">
-        <div class="item-card-name">${p.name}</div>
-        <div class="item-card-meta">${p.subtitle || ''}</div>
-      </div>
-      <div class="item-card-actions">
-        <button class="btn-icon" onclick="editPop('${p.id}')">Editar</button>
-        <button class="btn-icon danger" onclick="deletePop('${p.id}')">Eliminar</button>
-      </div>
-    </div>
-  `).join('') || '<p style="color:var(--muted)">No hay populares.</p>';
-}
-
-document.getElementById('addPopBtn').onclick = () => {
-  editingType = 'pop';
-  editingId = null;
-  const prodOptions = `<option value="">— Ninguno —</option>` +
-    MENU_DATA.products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-  openModal('Nuevo popular', `
-    ${formField('Nombre', 'f-name', '')}
-    ${formField('Subtítulo', 'f-subtitle', '')}
-    ${formField('Producto vinculado', 'f-productId', '', 'select', prodOptions)}
-    <div class="form-group">
-      <label>Imagen</label>
-      <input type="file" id="f-imageFile" accept="image/*">
-      <input type="text" id="f-image" placeholder="URL" style="margin-top:6px">
-    </div>
-  `, savePopModal);
-};
-
-window.editPop = id => {
-  const p = MENU_DATA.popular.find(x => x.id === id);
-  editingType = 'pop';
-  editingId = id;
-  const prodOptions = `<option value="">— Ninguno —</option>` +
-    MENU_DATA.products.map(pr => `<option value="${pr.id}" ${pr.id === p.productId ? 'selected' : ''}>${pr.name}</option>`).join('');
-  openModal('Editar popular', `
-    ${formField('Nombre', 'f-name', p.name)}
-    ${formField('Subtítulo', 'f-subtitle', p.subtitle || '')}
-    ${formField('Producto vinculado', 'f-productId', '', 'select', prodOptions)}
-    <div class="form-group">
-      <label>Imagen</label>
-      <input type="file" id="f-imageFile" accept="image/*">
-      <input type="text" id="f-image" value="${p.image || ''}" style="margin-top:6px">
-    </div>
-  `, savePopModal);
-};
-
-async function savePopModal() {
-  let image = document.getElementById('f-image')?.value?.trim() || '';
-  const fileInput = document.getElementById('f-imageFile');
-  if (fileInput?.files[0]) image = await imageToDataUrl(fileInput.files[0]);
-
-  const prodId = document.getElementById('f-productId').value;
-  const data = {
-    name: document.getElementById('f-name').value,
-    subtitle: document.getElementById('f-subtitle').value,
-    image,
-    productId: prodId || undefined
-  };
-
-  if (editingId) {
-    const p = MENU_DATA.popular.find(x => x.id === editingId);
-    Object.assign(p, data);
-  } else {
-    if (!MENU_DATA.popular) MENU_DATA.popular = [];
-    MENU_DATA.popular.push({ id: generateId('pop'), ...data });
-  }
-  saveMenuData(MENU_DATA);
-  closeModal();
-  renderPopular();
-  showToast('Popular guardado ✓');
-}
-
-window.deletePop = id => {
-  if (!confirm('¿Eliminar este popular?')) return;
-  MENU_DATA.popular = MENU_DATA.popular.filter(p => p.id !== id);
-  saveMenuData(MENU_DATA);
-  renderPopular();
-  showToast('Popular eliminado');
-};
-
 function renderAll() {
   fillSettingsForm();
   renderCategories();
   renderProducts();
   renderRecommended();
-  renderPopular();
 }
 
 init();

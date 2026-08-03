@@ -248,7 +248,7 @@ function renderRecommended() {
 
 function renderPopular() {
   const list = document.getElementById('popularList');
-  const items = MENU_DATA.popular || [];
+  const items = buildAutomaticPopularList(MENU_DATA.products || []).slice(0, 3);
   list.innerHTML = items.map(pop => {
     const clickAction = pop.productId ? `openProductModal('${pop.productId}')` : '';
     return `

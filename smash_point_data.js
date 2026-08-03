@@ -1,8 +1,46 @@
 const STORAGE_KEY = 'smash_point_menu_data_v1';
 const DEFAULT_MENU_DATA = null;
+const POPULAR_DEFAULT_IDS = ['h2', 'h5', 'd1'];
 
 let MENU_DATA = null;
 let MENU = {};
+
+function getProductDemand(product) {
+  if (!product || typeof product !== 'object') return 0;
+  const score = Number(product.demand ?? product.popularity ?? product.sales ?? 0);
+  return Number.isFinite(score) ? score : 0;
+}
+
+function buildAutomaticPopularList(products = []) {
+  if (!Array.isArray(products) || !products.length) return [];
+
+  const productMap = new Map(products.map(product => [product.id, product]));
+  const ranked = [...products].sort((a, b) => {
+    const diff = getProductDemand(b) - getProductDemand(a);
+    return diff !== 0 ? diff : (a.name || '').localeCompare(b.name || '');
+  });
+
+  const selected = [];
+  const seen = new Set();
+
+  for (const productId of [...POPULAR_DEFAULT_IDS, ...ranked.map(product => product.id)]) {
+    if (!productMap.has(productId) || seen.has(productId)) continue;
+
+    const product = productMap.get(productId);
+    selected.push({
+      id: `pop-${product.id}`,
+      name: product.name,
+      subtitle: product.note || product.desc || 'Lo más pedido',
+      image: product.image,
+      productId: product.id
+    });
+
+    seen.add(productId);
+    if (selected.length >= 3) break;
+  }
+
+  return selected;
+}
 
 function getSupabaseClient() {
   if (!window.__SUPABASE_CONFIG__) return null;
@@ -39,6 +77,14 @@ function normalizeMenuData(data) {
   if (!data.settings) data.settings = {};
   data.settings.logo = normalizeLogoPath(data.settings.logo || 'assets/mascota smash point.png');
   data.id = data.id || 'default';
+
+  if (!Array.isArray(data.products)) data.products = [];
+  data.products = data.products.map(product => ({
+    ...product,
+    demand: Number(product.demand ?? product.popularity ?? product.sales ?? 0) || 0
+  }));
+
+  data.popular = buildAutomaticPopularList(data.products);
   return data;
 }
 
