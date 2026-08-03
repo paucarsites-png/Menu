@@ -281,7 +281,6 @@ function applySettings() {
   document.getElementById('brandLogo').src = logo;
   document.getElementById('sideLogo').src = logo;
   document.getElementById('brandName').textContent = s.businessName || 'Smash Point';
-  document.getElementById('locationText').textContent = s.locationName || s.businessName || 'Smash Point';
   document.title = (s.businessName || 'Smash Point') + ' — Menú';
 
   const infoHtml = `
