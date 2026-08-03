@@ -287,7 +287,7 @@ function renderSideNav() {
 
 function applySettings() {
   const s = getSettings();
-  const logo = s.logo || 'assets/logo.png';
+  const logo = s.logo || 'assets/mascota smash point.png';
 
   document.getElementById('brandLogo').src = logo;
   document.getElementById('sideLogo').src = logo;

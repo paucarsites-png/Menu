@@ -26,33 +26,98 @@ function showLogin() {
   sessionStorage.removeItem(AUTH_KEY);
 }
 
+async function checkSupabaseConnection() {
+  const config = window.__SUPABASE_CONFIG__ || {};
+  const isPlaceholder = !config.url || !config.anonKey || config.url.includes('TU_') || config.anonKey.includes('TU_');
+  if (isPlaceholder) {
+    document.getElementById('loginError').textContent = 'Supabase no está configurado. Completa URL y anon key en supabase-config.js.';
+    return false;
+  }
+  return true;
+}
+
 async function init() {
   await loadMenuData();
-  if (isAuthenticated()) showAdmin();
-  else showLogin();
 
-  const logo = MENU_DATA.settings?.logo || 'assets/logo.png';
+  const isConfigured = await checkSupabaseConnection();
+  if (!isConfigured) return;
+
+  const client = getSupabaseClient();
+  if (!client) {
+    document.getElementById('loginError').textContent = 'Supabase JS no está cargado. Revisa el script en sp-gestion.html.';
+    return;
+  }
+
+  const { data: { session } } = await client.auth.getSession();
+  if (session) {
+    sessionStorage.setItem(AUTH_KEY, '1');
+    showAdmin();
+  } else {
+    showLogin();
+  }
+
+  const logo = normalizeLogoPath(MENU_DATA.settings?.logo || 'assets/mascota smash point.png');
   document.getElementById('loginLogo').src = logo;
+
+  client.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      sessionStorage.setItem(AUTH_KEY, '1');
+      showAdmin();
+    } else {
+      sessionStorage.removeItem(AUTH_KEY);
+      showLogin();
+    }
+  });
 }
 
 // ── Login ──
-document.getElementById('loginBtn').onclick = () => {
-  const pass = document.getElementById('loginPassword').value;
-  const expected = MENU_DATA.settings?.adminPassword || 'smashpoint2026';
-  if (pass === expected) {
+document.getElementById('loginForm').onsubmit = async (event) => {
+  event.preventDefault();
+
+  const client = getSupabaseClient();
+  if (!client) {
+    document.getElementById('loginError').textContent = 'Supabase no está disponible';
+    return;
+  }
+
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email || !password) {
+    document.getElementById('loginError').textContent = 'Ingresa correo y contraseña';
+    return;
+  }
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    document.getElementById('loginError').textContent = error.message || 'Error al iniciar sesión';
+    return;
+  }
+
+  if (data?.user) {
     sessionStorage.setItem(AUTH_KEY, '1');
     document.getElementById('loginError').textContent = '';
     showAdmin();
-  } else {
-    document.getElementById('loginError').textContent = 'Contraseña incorrecta';
   }
 };
 
-document.getElementById('loginPassword').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('loginBtn').click();
-});
+document.getElementById('logoutBtn').onclick = async () => {
+  const client = getSupabaseClient();
+  if (!client) return;
 
-document.getElementById('logoutBtn').onclick = showLogin;
+  const { error } = await client.auth.signOut();
+  if (error) {
+    showToast(error.message || 'No se pudo cerrar sesión');
+    return;
+  }
+
+  sessionStorage.removeItem(AUTH_KEY);
+  showLogin();
+};
 
 // ── Tabs ──
 document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -76,8 +141,9 @@ function fillSettingsForm() {
   document.getElementById('s-tagline').value = s.tagline || '';
   document.getElementById('s-ivaRate').value = Math.round((s.ivaRate || 0.15) * 100);
   document.getElementById('s-adminPassword').value = s.adminPassword || '';
-  document.getElementById('s-logoPreview').src = s.logo || 'assets/logo.png';
-  document.getElementById('adminLogo').src = s.logo || 'assets/logo.png';
+  const logo = normalizeLogoPath(s.logo || 'assets/mascota smash point.png');
+  document.getElementById('s-logoPreview').src = logo;
+  document.getElementById('adminLogo').src = logo;
 }
 
 document.getElementById('settingsForm').onsubmit = e => {

@@ -12,14 +12,15 @@
 
 <!-- Login screen -->
 <div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <img class="login-logo" id="loginLogo" src="assets/logo.png" alt="">
+  <form class="login-box" id="loginForm">
+    <img class="login-logo" id="loginLogo" src="assets/mascota smash point.png" alt="">
     <h1>Panel de gestión</h1>
-    <p>Ingresa la clave de administrador</p>
-    <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password">
-    <button class="btn-primary" id="loginBtn">Entrar</button>
+    <p>Ingresa tu cuenta de administrador</p>
+    <input type="email" id="loginEmail" placeholder="correo@ejemplo.com" autocomplete="email" required>
+    <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password" required>
+    <button type="submit" class="btn-primary" id="loginBtn">Entrar</button>
     <p class="login-error" id="loginError"></p>
-  </div>
+  </form>
 </div>
 
 <!-- Admin panel -->
@@ -27,7 +28,7 @@
 
   <header class="admin-header">
     <div class="admin-header-left">
-      <img class="admin-logo" id="adminLogo" src="assets/logo.png" alt="">
+      <img class="admin-logo" id="adminLogo" src="assets/mascota smash point.png" alt="">
       <h1>Smash Point — Admin</h1>
       <button class="btn-outline btn-logout" id="logoutBtn">Salir</button>
     </div>
@@ -87,7 +88,7 @@
           <div class="form-group full">
             <label>Logo del local</label>
             <div class="logo-upload">
-              <img id="s-logoPreview" src="assets/logo.png" alt="Logo">
+              <img id="s-logoPreview" src="assets/mascota smash point.png" alt="Logo">
               <label class="btn-outline">
                 Subir imagen
                 <input type="file" id="s-logoFile" accept="image/*" hidden>
@@ -159,6 +160,8 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script src="smash_point_data.js"></script>
 <script src="sp-gestion.js"></script>
 </body>

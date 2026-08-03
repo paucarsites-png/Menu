@@ -1,13 +1,68 @@
 const STORAGE_KEY = 'smash_point_menu_data_v1';
+const DEFAULT_MENU_DATA = null;
 
 let MENU_DATA = null;
 let MENU = {};
 
+function getSupabaseClient() {
+  if (!window.__SUPABASE_CONFIG__) return null;
+  if (window.__SUPABASE_CLIENT__) return window.__SUPABASE_CLIENT__;
+
+  const { url, anonKey } = window.__SUPABASE_CONFIG__;
+  if (!url || !anonKey || url.includes('TU_')) return null;
+
+  try {
+    const lib = window.supabase;
+    if (!lib || typeof lib.createClient !== 'function') {
+      return null;
+    }
+
+    const client = lib.createClient(url, anonKey);
+    window.__SUPABASE_CLIENT__ = client;
+    return client;
+  } catch (error) {
+    console.warn('No se pudo crear el cliente de Supabase:', error);
+    return null;
+  }
+}
+
+function normalizeLogoPath(path) {
+  const safe = typeof path === 'string' ? path.trim() : '';
+  if (!safe || safe === 'assets/logo.png' || safe.endsWith('/logo.png')) {
+    return 'assets/mascota smash point.png';
+  }
+  return safe;
+}
+
+function normalizeMenuData(data) {
+  if (!data || typeof data !== 'object') return data;
+  if (!data.settings) data.settings = {};
+  data.settings.logo = normalizeLogoPath(data.settings.logo || 'assets/mascota smash point.png');
+  data.id = data.id || 'default';
+  return data;
+}
+
 async function loadMenuData() {
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('menu_data').select('*').limit(1).maybeSingle();
+      if (!error && data) {
+        MENU_DATA = normalizeMenuData(data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(MENU_DATA));
+        return MENU_DATA;
+      }
+      if (error) console.warn('Supabase no disponible, usando fallback local:', error.message);
+    } catch (error) {
+      console.warn('Error al cargar datos desde Supabase:', error);
+    }
+  }
+
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     try {
-      MENU_DATA = JSON.parse(stored);
+      MENU_DATA = normalizeMenuData(JSON.parse(stored));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(MENU_DATA));
       return MENU_DATA;
     } catch (e) {
       console.warn('Datos locales corruptos, cargando defaults.');
@@ -15,14 +70,37 @@ async function loadMenuData() {
   }
 
   const res = await fetch('menu-data.json');
-  MENU_DATA = await res.json();
+  MENU_DATA = normalizeMenuData(await res.json());
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(MENU_DATA));
   return MENU_DATA;
 }
 
-function saveMenuData(data) {
-  MENU_DATA = data;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  buildMenuFromData(data);
+async function saveMenuData(data) {
+  MENU_DATA = normalizeMenuData(data);
+  MENU_DATA.id = 'default';
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(MENU_DATA));
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const payload = {
+        id: 'default',
+        settings: MENU_DATA.settings,
+        categories: MENU_DATA.categories,
+        products: MENU_DATA.products,
+        recommended: MENU_DATA.recommended,
+        popular: MENU_DATA.popular,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase.from('menu_data').upsert(payload, { onConflict: 'id' });
+      if (error) console.warn('No se pudo guardar en Supabase:', error.message);
+    } catch (error) {
+      console.warn('Error al sincronizar con Supabase:', error);
+    }
+  }
+
+  buildMenuFromData(MENU_DATA);
 }
 
 function buildMenuFromData(data) {

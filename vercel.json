@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/smash_point_menu", "dest": "/smash_point_menu.html" },
+    { "src": "/sp-gestion", "dest": "/sp-gestion.html" }
+  ]
+}
