@@ -139,7 +139,6 @@ function fillSettingsForm() {
   document.getElementById('s-hours').value = s.hours || '';
   document.getElementById('s-address').value = s.address || '';
   document.getElementById('s-tagline').value = s.tagline || '';
-  document.getElementById('s-ivaRate').value = Math.round((s.ivaRate || 0.15) * 100);
   document.getElementById('s-adminPassword').value = s.adminPassword || '';
   const logo = normalizeLogoPath(s.logo || 'assets/mascota smash point.png');
   document.getElementById('s-logoPreview').src = logo;
@@ -157,7 +156,6 @@ document.getElementById('settingsForm').onsubmit = e => {
     hours: document.getElementById('s-hours').value,
     address: document.getElementById('s-address').value,
     tagline: document.getElementById('s-tagline').value,
-    ivaRate: parseInt(document.getElementById('s-ivaRate').value, 10) / 100,
     adminPassword: document.getElementById('s-adminPassword').value,
     logo: MENU_DATA.settings.logo
   };
