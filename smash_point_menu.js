@@ -1,4 +1,3 @@
-import { Analytics } from "@vercel/analytics/next"
 const cart = {};
 
 const optionMenus = {};
