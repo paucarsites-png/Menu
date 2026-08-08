@@ -152,5 +152,17 @@
 <script src="supabase-config.js"></script>
 <script src="smash_point_data.js"></script>
 <script src="sp-gestion.js"></script>
+<script type="importmap">
+  {
+    "imports": {
+      "@vercel/analytics": "https://cdn.jsdelivr.net/npm/@vercel/analytics@2.0.1/+esm"
+    }
+  }
+</script>
+<script type="module">
+  import { inject } from "@vercel/analytics";
+
+  inject();
+</script>
 </body>
 </html>

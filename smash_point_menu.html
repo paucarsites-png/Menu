@@ -127,5 +127,17 @@
 <script src="smash_point_data.js"></script>
 <script src="smash_point_menu.js"></script>
 <script src="smash_point_whatsapp.js"></script>
+<script type="importmap">
+  {
+    "imports": {
+      "@vercel/analytics": "https://cdn.jsdelivr.net/npm/@vercel/analytics@2.0.1/+esm"
+    }
+  }
+</script>
+<script type="module">
+  import { inject } from "@vercel/analytics";
+
+  inject();
+</script>
 </body>
 </html>

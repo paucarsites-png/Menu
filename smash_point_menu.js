@@ -1,4 +1,6 @@
+import { Analytics } from "@vercel/analytics/next"
 const cart = {};
+
 const optionMenus = {};
 let currentView = 'home';
 let currentCategory = null;
